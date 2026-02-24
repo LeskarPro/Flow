@@ -1,6 +1,6 @@
 from django.db import migrations
 
-
+# Create initial categories with data and budget limits
 def create_initial_categories(apps, schema_editor):
     Category = apps.get_model('categories', 'Category')
 

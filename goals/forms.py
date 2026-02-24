@@ -28,17 +28,14 @@ class SavingsGoalForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # READ-ONLY FIELD: current_amount is read-only if goal is achieved
         if self.instance.pk and self.instance.is_achieved():
             self.fields['current_amount'].disabled = True
             self.fields['current_amount'].help_text = 'Goal achieved! Amount cannot be changed.'
 
-        # Customize fields
         self.fields['name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'e.g., Summer Vacation'})
         self.fields['target_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': '2000.00'})
         self.fields['current_amount'].widget.attrs.update({'class': 'form-control', 'placeholder': '0.00'})
 
-        # EXCLUDED FIELDS: notes is optional
         self.fields['notes'].required = False
 
     def clean(self):

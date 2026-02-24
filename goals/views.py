@@ -6,7 +6,7 @@ from .forms import SavingsGoalForm
 
 
 def goal_list(request):
-    """List all savings goals"""
+    # List all savings goals
     goals = SavingsGoal.objects.all()
 
     # Separate active and achieved goals
@@ -21,13 +21,13 @@ def goal_list(request):
 
 
 def goal_detail(request, pk):
-    """View single savings goal"""
+    # View single savings goal
     goal = get_object_or_404(SavingsGoal, pk=pk)
     return render(request, 'goals/goal_detail.html', {'goal': goal})
 
 
 def goal_create(request):
-    """Create new savings goal"""
+    # Create new savings goal
     if request.method == 'POST':
         form = SavingsGoalForm(request.POST)
         if form.is_valid():
@@ -44,7 +44,7 @@ def goal_create(request):
 
 
 def goal_edit(request, pk):
-    """Edit existing savings goal"""
+    # Edit existing savings goal
     goal = get_object_or_404(SavingsGoal, pk=pk)
 
     if request.method == 'POST':
@@ -64,7 +64,7 @@ def goal_edit(request, pk):
 
 
 def goal_delete(request, pk):
-    """Delete goal with confirmation"""
+    # Delete goal with confirmation
     goal = get_object_or_404(SavingsGoal, pk=pk)
 
     if request.method == 'POST':

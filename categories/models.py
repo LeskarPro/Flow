@@ -49,17 +49,17 @@ class Category(models.Model):
         return self.name
 
     def total_spent(self):
-        """Calculate total spent in this category"""
+        # Calculate total spent in this category
         return self.transaction_set.filter(
             type='expense'
         ).aggregate(total=models.Sum('amount'))['total'] or 0
 
     def budget_remaining(self):
-        """Calculate remaining budget"""
+        # Calculate remaining budget
         return self.budget_limit - self.total_spent()
 
     def budget_percentage(self):
-        """Calculate percentage of budget used"""
+        # Calculate percentage of budget used
         if self.budget_limit > 0:
             return (self.total_spent() / self.budget_limit) * 100
         return 0

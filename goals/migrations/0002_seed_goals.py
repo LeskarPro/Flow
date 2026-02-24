@@ -2,7 +2,7 @@ from django.db import migrations
 from django.utils import timezone
 from datetime import timedelta
 
-
+# Create initial savings goals with data and links to a category
 def create_initial_goals(apps, schema_editor):
     SavingsGoal = apps.get_model('goals', 'SavingsGoal')
     Category = apps.get_model('categories', 'Category')

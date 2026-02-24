@@ -20,14 +20,11 @@ class CategoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Customize widgets
         self.fields['name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'e.g., Groceries'})
         self.fields['budget_limit'].widget.attrs.update({'class': 'form-control', 'placeholder': '500.00'})
 
-        # READ-ONLY/DISABLED FIELD: Color has predefined choices
         self.fields['color'].widget = forms.Select(choices=Category.COLOR_CHOICES, attrs={'class': 'form-select'})
 
-        # EXCLUDED FIELDS: description can be empty
         self.fields['description'].required = False
 
     def clean_budget_limit(self):

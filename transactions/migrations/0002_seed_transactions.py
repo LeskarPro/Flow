@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 import random
 
-
+# Create initial transactions with data, including links to categories
 def create_initial_transactions(apps, schema_editor):
     Transaction = apps.get_model('transactions', 'Transaction')
     Category = apps.get_model('categories', 'Category')

@@ -9,8 +9,8 @@ from goals.models import SavingsGoal
 from .forms import TransactionForm
 
 
+# Dashboard with summary statistics and recent data
 def dashboard(request):
-    """Dashboard with summary statistics and recent data"""
     # Get current month date range
     today = timezone.now().date()
     month_start = today.replace(day=1)
@@ -65,7 +65,7 @@ def dashboard(request):
 
 
 def transaction_list(request):
-    """List all transactions"""
+    # List all transactions
     transactions = Transaction.objects.all()
 
     # Filter by type if specified
@@ -87,13 +87,13 @@ def transaction_list(request):
 
 
 def transaction_detail(request, pk):
-    """View single transaction"""
+    # View single transaction
     transaction = get_object_or_404(Transaction, pk=pk)
     return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
 
 
 def transaction_create(request):
-    """Create new transaction"""
+    # Create new transaction
     if request.method == 'POST':
         form = TransactionForm(request.POST)
         if form.is_valid():
@@ -110,7 +110,7 @@ def transaction_create(request):
 
 
 def transaction_edit(request, pk):
-    """Edit existing transaction"""
+    # Edit existing transaction
     transaction = get_object_or_404(Transaction, pk=pk)
 
     if request.method == 'POST':
@@ -130,7 +130,7 @@ def transaction_edit(request, pk):
 
 
 def transaction_delete(request, pk):
-    """Delete transaction with confirmation"""
+    # Delete transaction with confirmation
     transaction = get_object_or_404(Transaction, pk=pk)
 
     if request.method == 'POST':
@@ -144,7 +144,7 @@ def transaction_delete(request, pk):
 
 
 def transaction_by_type(request, transaction_type):
-    """Filter transactions by type"""
+    # Filter transactions by type
     transactions = Transaction.objects.filter(type=transaction_type)
     type_display = 'Income' if transaction_type == 'income' else 'Expenses'
 

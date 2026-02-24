@@ -47,23 +47,23 @@ class SavingsGoal(models.Model):
         return f"{self.name} (${self.current_amount}/${self.target_amount})"
 
     def progress_percentage(self):
-        """Calculate progress percentage"""
+        # Calculate progress percentage
         if self.target_amount > 0:
             return min((self.current_amount / self.target_amount) * 100, 100)
         return 0
 
     def remaining_amount(self):
-        """Calculate amount left to save"""
+        # Calculate amount left to save
         return max(self.target_amount - self.current_amount, 0)
 
     def days_remaining(self):
-        """Calculate days until deadline"""
+        # Calculate days until deadline
         if self.deadline >= timezone.now().date():
             return (self.deadline - timezone.now().date()).days
         return 0
 
     def is_achieved(self):
-        """Check if goal is achieved"""
+        # Check if goal is achieved
         return self.current_amount >= self.target_amount
 
     def clean(self):

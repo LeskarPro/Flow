@@ -7,7 +7,7 @@ from .forms import CategoryForm
 
 
 def category_list(request):
-    """List all categories with their budget stats"""
+    # List all categories with their budget stats
     categories = Category.objects.all()
 
     # Add spent amount to each category
@@ -22,7 +22,7 @@ def category_list(request):
 
 
 def category_detail(request, pk):
-    """View single category with its transactions"""
+    # View single category with its transactions
     category = get_object_or_404(Category, pk=pk)
 
     # Get transactions for this category
@@ -42,7 +42,7 @@ def category_detail(request, pk):
 
 
 def category_create(request):
-    """Create new category"""
+    # Create new category
     if request.method == 'POST':
         form = CategoryForm(request.POST)
         if form.is_valid():
@@ -59,7 +59,7 @@ def category_create(request):
 
 
 def category_edit(request, pk):
-    """Edit existing category"""
+    # Edit existing category
     category = get_object_or_404(Category, pk=pk)
 
     if request.method == 'POST':
@@ -79,7 +79,7 @@ def category_edit(request, pk):
 
 
 def category_delete(request, pk):
-    """Delete category with confirmation"""
+    # Delete category with confirmation
     category = get_object_or_404(Category, pk=pk)
 
     # Check if category has transactions
