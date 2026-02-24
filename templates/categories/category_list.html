@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load flow_extras %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Spending Categories</h1>
+    <a href="{% url 'category_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add Category
+    </a>
+</div>
+
+<div class="row">
+    {% for category in categories %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-{{ category.color }} text-white">
+                    <h5 class="mb-0">{{ category.name }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if category.description %}
+                        <p class="text-muted small">{{ category.description }}</p>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <small>Budget</small>
+                            <small>{{ category.budget_limit|currency }}</small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small>Spent</small>
+                            <small class="text-danger">{{ category.spent|currency }}</small>
+                        </div>
+                        {% with remaining=category.budget_remaining %}
+                            <div class="d-flex justify-content-between">
+                                <small>Remaining</small>
+                                <small class="{% if remaining >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ remaining|currency }}
+                                </small>
+                            </div>
+                        {% endwith %}
+                        
+                        {% with percentage=category.budget_percentage %}
+                            <div class="progress mt-2">
+                                <div class="progress-bar bg-{{ category.color }}" 
+                                     style="width: {{ percentage }}%"
+                                     role="progressbar">
+                                    {{ percentage|floatformat:1 }}%
+                                </div>
+                            </div>
+                        {% endwith %}
+                    </div>
+                    
+                    <a href="{% url 'category_detail' category.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No categories yet. <a href="{% url 'category_create' %}">Create your first category</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

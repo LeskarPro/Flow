@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">
+            <i class="fas fa-wallet me-2"></i>Flow
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                       href="{% url 'dashboard' %}">
+                        <i class="fas fa-home me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'transactions' in request.path %}active{% endif %}"
+                       href="{% url 'transaction_list' %}">
+                        <i class="fas fa-exchange-alt me-1"></i>Transactions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'categories' in request.path %}active{% endif %}"
+                       href="{% url 'category_list' %}">
+                        <i class="fas fa-tags me-1"></i>Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'goals' in request.path %}active{% endif %}"
+                       href="{% url 'goal_list' %}">
+                        <i class="fas fa-bullseye me-1"></i>Goals
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

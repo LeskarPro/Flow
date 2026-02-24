@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load flow_extras %}
+
+{% block title %}Savings Goals{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Savings Goals</h1>
+    <a href="{% url 'goal_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>New Goal
+    </a>
+</div>
+
+<!-- Active Goals -->
+<h3 class="h4 mb-3">Active Goals</h3>
+<div class="row mb-5">
+    {% for goal in active_goals %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ goal.name }}</h5>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Progress</small>
+                            <small>{{ goal.current_amount|currency }} / {{ goal.target_amount|currency }}</small>
+                        </div>
+                        {% with progress=goal.current_amount|progress_percentage:goal.target_amount %}
+                            <div class="progress">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ progress }}%"
+                                     role="progressbar">
+                                    {{ progress }}%
+                                </div>
+                            </div>
+                        {% endwith %}
+                    </div>
+                    
+                    <div class="small text-muted mb-2">
+                        <i class="fas fa-clock me-1"></i>
+                        {% with days=goal.days_remaining %}
+                            {% if days > 0 %}
+                                {{ days }} days remaining
+                            {% else %}
+                                Deadline passed
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    
+                    {% if goal.categories.all %}
+                        <div class="mb-3">
+                            {% for category in goal.categories.all %}
+                                <span class="badge bg-{{ category.color }}">{{ category.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'goal_detail' goal.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                        View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No active goals. <a href="{% url 'goal_create' %}">Create your first savings goal</a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Achieved Goals -->
+{% if achieved_goals %}
+    <h3 class="h4 mb-3">Achieved Goals</h3>
+    <div class="row">
+        {% for goal in achieved_goals %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ goal.name }}</h5>
+                        <div class="mb-2">
+                            <span class="badge bg-success">Goal Achieved!</span>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            Saved {{ goal.target_amount|currency }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

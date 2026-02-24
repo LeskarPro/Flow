@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load flow_extras %}
+
+{% block title %}Delete Goal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h1 class="h3 mb-0">Confirm Delete</h1>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to delete "{{ goal.name }}"?</p>
+                
+                <div class="alert alert-info">
+                    <strong>Progress:</strong> {{ goal.current_amount|currency }} / {{ goal.target_amount|currency }}<br>
+                    <strong>Deadline:</strong> {{ goal.deadline|date:"M d, Y" }}
+                </div>
+                
+                <p class="text-danger">This action cannot be undone!</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'goal_detail' goal.pk %}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            Yes, Delete Goal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load flow_extras %}
+
+{% block title %}{{ goal.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">{{ goal.name }}</h1>
+                <div>
+                    <a href="{% url 'goal_edit' goal.pk %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                    <a href="{% url 'goal_delete' goal.pk %}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if goal.is_achieved %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-trophy me-2"></i>Congratulations! You've achieved this goal!
+                    </div>
+                {% endif %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Progress</h5>
+                        <div class="display-6 mb-2">{{ goal.current_amount|currency }} / {{ goal.target_amount|currency }}</div>
+                        {% with progress=goal.current_amount|progress_percentage:goal.target_amount %}
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ progress }}%; height: 25px;"
+                                     role="progressbar">
+                                    {{ progress }}%
+                                </div>
+                            </div>
+                        {% endwith %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Details</h5>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Target Amount:</td>
+                                <td><strong>{{ goal.target_amount|currency }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Current Savings:</td>
+                                <td><strong>{{ goal.current_amount|currency }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Remaining:</td>
+                                <td><strong class="text-primary">{{ goal.remaining_amount|currency }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Deadline:</td>
+                                <td>
+                                    <strong>{{ goal.deadline|date:"F d, Y" }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {% with days=goal.days_remaining %}
+                                            {% if days > 0 %}
+                                                {{ days }} days remaining
+                                            {% else %}
+                                                Deadline passed
+                                            {% endif %}
+                                        {% endwith %}
+                                    </small>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {% if goal.notes %}
+                    <div class="mb-4">
+                        <h5>Notes</h5>
+                        <div class="p-3 bg-light rounded">
+                            {{ goal.notes|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if goal.categories.all %}
+                    <div class="mb-4">
+                        <h5>Related Categories</h5>
+                        {% for category in goal.categories.all %}
+                            <span class="badge bg-{{ category.color }} p-2 me-1">
+                                <a href="{% url 'category_detail' category.pk %}" class="text-white text-decoration-none">
+                                    {{ category.name }}
+                                </a>
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'goal_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Goals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

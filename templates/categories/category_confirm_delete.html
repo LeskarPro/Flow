@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Category{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h1 class="h3 mb-0">Confirm Delete</h1>
+            </div>
+            <div class="card-body">
+                <p class="lead">Are you sure you want to delete "{{ category.name }}"?</p>
+                
+                {% if has_transactions %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This category has transactions associated with it. 
+                        Deleting it will set those transactions to have no category.
+                    </div>
+                {% endif %}
+                
+                <p class="text-danger">This action cannot be undone!</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'category_detail' category.pk %}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            Yes, Delete Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
