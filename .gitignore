@@ -28,7 +28,6 @@ staticfiles/
 *.swo
 *~
 .DS_Store
-
+*.docx
 # Project specific
-**/migrations/*.py
-!**/migrations/__init__.py
+# Note: migrations are tracked - they are part of the project

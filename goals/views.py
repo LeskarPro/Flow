@@ -1,15 +1,15 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.utils import timezone
+
 from .models import SavingsGoal
 from .forms import SavingsGoalForm
 
 
+@login_required
 def goal_list(request):
-    # List all savings goals
-    goals = SavingsGoal.objects.all()
+    goals = SavingsGoal.objects.filter(user=request.user)
 
-    # Separate active and achieved goals
     active_goals = [g for g in goals if not g.is_achieved()]
     achieved_goals = [g for g in goals if g.is_achieved()]
 
@@ -20,18 +20,21 @@ def goal_list(request):
     return render(request, 'goals/goal_list.html', context)
 
 
+@login_required
 def goal_detail(request, pk):
-    # View single savings goal
-    goal = get_object_or_404(SavingsGoal, pk=pk)
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
     return render(request, 'goals/goal_detail.html', {'goal': goal})
 
 
+@login_required
 def goal_create(request):
-    # Create new savings goal
     if request.method == 'POST':
         form = SavingsGoalForm(request.POST)
         if form.is_valid():
-            goal = form.save()
+            goal = form.save(commit=False)
+            goal.user = request.user
+            goal.save()
+            form.save_m2m()  # Save the ManyToMany categories field
             messages.success(request, f'Goal "{goal.name}" created successfully!')
             return redirect('goal_detail', pk=goal.pk)
     else:
@@ -43,9 +46,9 @@ def goal_create(request):
     })
 
 
+@login_required
 def goal_edit(request, pk):
-    # Edit existing savings goal
-    goal = get_object_or_404(SavingsGoal, pk=pk)
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
 
     if request.method == 'POST':
         form = SavingsGoalForm(request.POST, instance=goal)
@@ -63,9 +66,9 @@ def goal_edit(request, pk):
     })
 
 
+@login_required
 def goal_delete(request, pk):
-    # Delete goal with confirmation
-    goal = get_object_or_404(SavingsGoal, pk=pk)
+    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
 
     if request.method == 'POST':
         goal.delete()

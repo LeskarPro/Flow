@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from categories.models import Category
-import datetime
 
 
 class Transaction(models.Model):
@@ -44,6 +44,14 @@ class Transaction(models.Model):
         blank=True,
         null=True,
         help_text="Additional details about the transaction"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='transactions',
+        help_text="Owner of this transaction"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

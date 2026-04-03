@@ -1,53 +1,54 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Sum, Q
 from django.utils import timezone
-from datetime import timedelta
+
 from .models import Transaction
 from categories.models import Category
 from goals.models import SavingsGoal
 from .forms import TransactionForm
 
 
-# Dashboard with summary statistics and recent data
+@login_required
 def dashboard(request):
-    # Get current month date range
     today = timezone.now().date()
     month_start = today.replace(day=1)
 
-    # Calculate totals
-    total_income = Transaction.objects.filter(
+    # All calculations are scoped to the logged-in user
+    user_transactions = Transaction.objects.filter(user=request.user)
+
+    total_income = user_transactions.filter(
         type='income'
     ).aggregate(Sum('amount'))['amount__sum'] or 0
 
-    total_expenses = Transaction.objects.filter(
+    total_expenses = user_transactions.filter(
         type='expense'
     ).aggregate(Sum('amount'))['amount__sum'] or 0
 
     balance = total_income - total_expenses
 
-    # Monthly totals
-    monthly_income = Transaction.objects.filter(
+    monthly_income = user_transactions.filter(
         type='income',
         date__gte=month_start
     ).aggregate(Sum('amount'))['amount__sum'] or 0
 
-    monthly_expenses = Transaction.objects.filter(
+    monthly_expenses = user_transactions.filter(
         type='expense',
         date__gte=month_start
     ).aggregate(Sum('amount'))['amount__sum'] or 0
 
-    # Recent transactions
-    recent_transactions = Transaction.objects.all()[:5]
+    recent_transactions = user_transactions.order_by('-date', '-created_at')[:5]
 
-    # Top spending categories
     top_categories = Category.objects.annotate(
-        spent=Sum('transaction__amount',
-                  filter=Q(transaction__type='expense'))
+        spent=Sum(
+            'transaction__amount',
+            filter=Q(transaction__type='expense', transaction__user=request.user)
+        )
     ).filter(spent__isnull=False).order_by('-spent')[:5]
 
-    # Active goals
     active_goals = SavingsGoal.objects.filter(
+        user=request.user,
         deadline__gte=today
     )[:3]
 
@@ -64,16 +65,14 @@ def dashboard(request):
     return render(request, 'transactions/dashboard.html', context)
 
 
+@login_required
 def transaction_list(request):
-    # List all transactions
-    transactions = Transaction.objects.all()
+    transactions = Transaction.objects.filter(user=request.user)
 
-    # Filter by type if specified
     filter_type = request.GET.get('type')
     if filter_type in ['income', 'expense']:
         transactions = transactions.filter(type=filter_type)
 
-    # Sort by
     sort = request.GET.get('sort', '-date')
     if sort in ['date', '-date', 'amount', '-amount']:
         transactions = transactions.order_by(sort)
@@ -86,19 +85,21 @@ def transaction_list(request):
     return render(request, 'transactions/transaction_list.html', context)
 
 
+@login_required
 def transaction_detail(request, pk):
-    # View single transaction
-    transaction = get_object_or_404(Transaction, pk=pk)
+    transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
     return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
 
 
+@login_required
 def transaction_create(request):
-    # Create new transaction
     if request.method == 'POST':
         form = TransactionForm(request.POST)
         if form.is_valid():
-            transaction = form.save()
-            messages.success(request, f'Transaction "{transaction.title}" created successfully!')
+            transaction = form.save(commit=False)
+            transaction.user = request.user
+            transaction.save()
+            messages.success(request, f'Transaction "{transaction.title}" added successfully!')
             return redirect('transaction_detail', pk=transaction.pk)
     else:
         form = TransactionForm()
@@ -109,9 +110,9 @@ def transaction_create(request):
     })
 
 
+@login_required
 def transaction_edit(request, pk):
-    # Edit existing transaction
-    transaction = get_object_or_404(Transaction, pk=pk)
+    transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
 
     if request.method == 'POST':
         form = TransactionForm(request.POST, instance=transaction)
@@ -129,9 +130,9 @@ def transaction_edit(request, pk):
     })
 
 
+@login_required
 def transaction_delete(request, pk):
-    # Delete transaction with confirmation
-    transaction = get_object_or_404(Transaction, pk=pk)
+    transaction = get_object_or_404(Transaction, pk=pk, user=request.user)
 
     if request.method == 'POST':
         transaction.delete()
@@ -143,9 +144,9 @@ def transaction_delete(request, pk):
     })
 
 
+@login_required
 def transaction_by_type(request, transaction_type):
-    # Filter transactions by type
-    transactions = Transaction.objects.filter(type=transaction_type)
+    transactions = Transaction.objects.filter(user=request.user, type=transaction_type)
     type_display = 'Income' if transaction_type == 'income' else 'Expenses'
 
     context = {
