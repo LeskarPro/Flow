@@ -2,9 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.goal_list, name='goal_list'),
-    path('<int:pk>/', views.goal_detail, name='goal_detail'),
-    path('create/', views.goal_create, name='goal_create'),
-    path('<int:pk>/edit/', views.goal_edit, name='goal_edit'),
-    path('<int:pk>/delete/', views.goal_delete, name='goal_delete'),
+    path('', views.GoalListView.as_view(), name='goal_list'),
+    path('create/', views.GoalCreateView.as_view(), name='goal_create'),
+    path('<int:pk>/', views.GoalDetailView.as_view(), name='goal_detail'),
+    path('<int:pk>/edit/', views.GoalUpdateView.as_view(), name='goal_edit'),
+    path('<int:pk>/delete/', views.GoalDeleteView.as_view(), name='goal_delete'),
 ]

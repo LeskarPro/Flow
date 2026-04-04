@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tags{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0"><i class="fas fa-tags me-2"></i>My Tags</h2>
+    <a href="{% url 'tag_create' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i>New Tag
+    </a>
+</div>
+
+{% if tags %}
+    <div class="row g-3">
+        {% for tag in tags %}
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <span class="badge bg-{{ tag.color }} fs-6 px-3 py-2">{{ tag.name }}</span>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'tag_edit' tag.pk %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="fas fa-tags fa-3x mb-3"></i>
+        <p class="lead">No tags yet.</p>
+        <a href="{% url 'tag_create' %}" class="btn btn-primary">Create your first tag</a>
+    </div>
+{% endif %}
+{% endblock %}

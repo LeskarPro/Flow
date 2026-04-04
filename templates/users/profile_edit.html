@@ -14,7 +14,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <form method="post" novalidate>
+                <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
 
                     <h6 class="text-muted fw-semibold text-uppercase small mb-3">Personal Info</h6>
@@ -38,6 +38,28 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.profile_picture.id_for_label }}" class="form-label fw-semibold">
+                            {{ form.profile_picture.label }}
+                        </label>
+                        {% if profile.profile_picture %}
+                            <div class="mb-2">
+                                <img src="{{ profile.profile_picture.url }}"
+                                     alt="Current picture"
+                                     class="rounded-circle object-fit-cover"
+                                     style="width: 60px; height: 60px;">
+                                <span class="text-muted small ms-2">Current photo</span>
+                            </div>
+                        {% endif %}
+                        {{ form.profile_picture }}
+                        {% if form.profile_picture.help_text %}
+                            <div class="form-text text-muted">{{ form.profile_picture.help_text }}</div>
+                        {% endif %}
+                        {% for error in form.profile_picture.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
                     </div>
 
                     <hr class="my-3">

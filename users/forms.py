@@ -82,7 +82,7 @@ class ProfileUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['currency', 'monthly_budget_limit', 'email_notifications']
+        fields = ['profile_picture', 'currency', 'monthly_budget_limit', 'email_notifications']
         widgets = {
             'monthly_budget_limit': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -90,14 +90,17 @@ class ProfileUpdateForm(forms.ModelForm):
                 'step': '0.01',
             }),
             'email_notifications': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
         labels = {
+            'profile_picture': 'Profile Picture',
             'currency': 'Preferred Currency',
             'monthly_budget_limit': 'Monthly Budget Limit',
             'email_notifications': 'Enable Email Notifications',
         }
         help_texts = {
             'monthly_budget_limit': 'Leave blank if you do not want a monthly spending limit.',
+            'profile_picture': 'Upload a photo (optional). JPG or PNG recommended.',
         }
 
     def __init__(self, *args, **kwargs):

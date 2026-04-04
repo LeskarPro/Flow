@@ -1,99 +1,101 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Sum, Q
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from .models import Category
-from transactions.models import Transaction
 from .forms import CategoryForm
+from transactions.models import Transaction
 
 
-@login_required
-def category_list(request):
-    categories = Category.objects.all()
+class CategoryListView(LoginRequiredMixin, ListView):
+    model = Category
+    template_name = 'categories/category_list.html'
+    context_object_name = 'categories'
 
-    for category in categories:
-        category.spent = Transaction.objects.filter(
-            category=category,
-            type='expense',
-            user=request.user
-        ).aggregate(Sum('amount'))['amount__sum'] or 0
-
-    context = {'categories': categories}
-    return render(request, 'categories/category_list.html', context)
-
-
-@login_required
-def category_detail(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-
-    # Show only the logged-in user's transactions for this category
-    transactions = Transaction.objects.filter(
-        category=category,
-        user=request.user
-    ).order_by('-date')
-
-    total_spent = transactions.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
-    total_income = transactions.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
-
-    context = {
-        'category': category,
-        'transactions': transactions,
-        'total_spent': total_spent,
-        'total_income': total_income,
-    }
-    return render(request, 'categories/category_detail.html', context)
+    def get_queryset(self):
+        # Annotate each category with how much the current user has spent in it
+        return Category.objects.annotate(
+            spent=Sum(
+                'transaction__amount',
+                filter=Q(transaction__type='expense', transaction__user=self.request.user)
+            )
+        ).order_by('name')
 
 
-@login_required
-def category_create(request):
-    if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            category = form.save()
-            messages.success(request, f'Category "{category.name}" created successfully!')
-            return redirect('category_detail', pk=category.pk)
-    else:
-        form = CategoryForm()
+class CategoryDetailView(LoginRequiredMixin, DetailView):
+    model = Category
+    template_name = 'categories/category_detail.html'
+    context_object_name = 'category'
 
-    return render(request, 'categories/category_form.html', {
-        'form': form,
-        'title': 'Add Category'
-    })
-
-
-@login_required
-def category_edit(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-
-    if request.method == 'POST':
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Category updated successfully!')
-            return redirect('category_detail', pk=category.pk)
-    else:
-        form = CategoryForm(instance=category)
-
-    return render(request, 'categories/category_form.html', {
-        'form': form,
-        'category': category,
-        'title': 'Edit Category'
-    })
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        transactions = Transaction.objects.filter(
+            category=self.object,
+            user=self.request.user
+        ).order_by('-date')
+        context['transactions'] = transactions
+        context['total_spent'] = (
+            transactions.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
+        )
+        context['total_income'] = (
+            transactions.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
+        )
+        return context
 
 
-@login_required
-def category_delete(request, pk):
-    category = get_object_or_404(Category, pk=pk)
+class CategoryCreateView(LoginRequiredMixin, CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'categories/category_form.html'
 
-    has_transactions = Transaction.objects.filter(category=category, user=request.user).exists()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Add Category'
+        return context
 
-    if request.method == 'POST':
-        category.delete()
-        messages.success(request, 'Category deleted successfully!')
-        return redirect('category_list')
+    def form_valid(self, form):
+        messages.success(self.request, f'Category "{form.instance.name}" created successfully!')
+        return super().form_valid(form)
 
-    return render(request, 'categories/category_confirm_delete.html', {
-        'category': category,
-        'has_transactions': has_transactions
-    })
+    def get_success_url(self):
+        return reverse_lazy('category_detail', kwargs={'pk': self.object.pk})
+
+
+class CategoryUpdateView(LoginRequiredMixin, UpdateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'categories/category_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Category'
+        context['category'] = self.object
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Category updated successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('category_detail', kwargs={'pk': self.object.pk})
+
+
+class CategoryDeleteView(LoginRequiredMixin, DeleteView):
+    model = Category
+    template_name = 'categories/category_confirm_delete.html'
+    context_object_name = 'category'
+    success_url = reverse_lazy('category_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['has_transactions'] = Transaction.objects.filter(
+            category=self.object,
+            user=self.request.user
+        ).exists()
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Category deleted successfully!')
+        return super().form_valid(form)

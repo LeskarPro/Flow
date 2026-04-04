@@ -6,6 +6,42 @@ from django.utils import timezone
 from categories.models import Category
 
 
+class Tag(models.Model):
+    """User-defined labels for organising transactions"""
+    COLOR_CHOICES = [
+        ('primary', 'Blue'),
+        ('success', 'Green'),
+        ('danger', 'Red'),
+        ('warning', 'Yellow'),
+        ('info', 'Light Blue'),
+        ('secondary', 'Gray'),
+    ]
+
+    name = models.CharField(
+        max_length=30,
+        help_text="Short label, e.g. 'tax-deductible' or 'one-off'"
+    )
+    color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES,
+        default='secondary',
+        help_text="Badge colour shown in the UI"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tags',
+    )
+
+    class Meta:
+        ordering = ['name']
+        # Same user cannot have two tags with the same name
+        unique_together = [['user', 'name']]
+
+    def __str__(self):
+        return self.name
+
+
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
         ('income', 'Income'),
@@ -52,6 +88,11 @@ class Transaction(models.Model):
         blank=True,
         related_name='transactions',
         help_text="Owner of this transaction"
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        blank=True,
+        help_text="Optional labels for this transaction"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

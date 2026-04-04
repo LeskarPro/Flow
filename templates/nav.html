@@ -34,6 +34,12 @@
                         <i class="fas fa-bullseye me-1"></i>Goals
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if 'tags' in request.path %}active{% endif %}"
+                       href="{% url 'tag_list' %}">
+                        <i class="fas fa-tags me-1"></i>Tags
+                    </a>
+                </li>
             </ul>
 
             <!-- Logged-in user menu -->

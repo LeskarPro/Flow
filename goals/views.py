@@ -1,78 +1,86 @@
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from .models import SavingsGoal
 from .forms import SavingsGoalForm
 
 
-@login_required
-def goal_list(request):
-    goals = SavingsGoal.objects.filter(user=request.user)
+class GoalListView(LoginRequiredMixin, ListView):
+    model = SavingsGoal
+    template_name = 'goals/goal_list.html'
 
-    active_goals = [g for g in goals if not g.is_achieved()]
-    achieved_goals = [g for g in goals if g.is_achieved()]
+    def get_queryset(self):
+        return SavingsGoal.objects.filter(user=self.request.user)
 
-    context = {
-        'active_goals': active_goals,
-        'achieved_goals': achieved_goals,
-    }
-    return render(request, 'goals/goal_list.html', context)
-
-
-@login_required
-def goal_detail(request, pk):
-    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
-    return render(request, 'goals/goal_detail.html', {'goal': goal})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        goals = self.get_queryset()
+        context['active_goals'] = [g for g in goals if not g.is_achieved()]
+        context['achieved_goals'] = [g for g in goals if g.is_achieved()]
+        return context
 
 
-@login_required
-def goal_create(request):
-    if request.method == 'POST':
-        form = SavingsGoalForm(request.POST)
-        if form.is_valid():
-            goal = form.save(commit=False)
-            goal.user = request.user
-            goal.save()
-            form.save_m2m()  # Save the ManyToMany categories field
-            messages.success(request, f'Goal "{goal.name}" created successfully!')
-            return redirect('goal_detail', pk=goal.pk)
-    else:
-        form = SavingsGoalForm()
+class GoalDetailView(LoginRequiredMixin, DetailView):
+    model = SavingsGoal
+    template_name = 'goals/goal_detail.html'
+    context_object_name = 'goal'
 
-    return render(request, 'goals/goal_form.html', {
-        'form': form,
-        'title': 'Create Savings Goal'
-    })
+    def get_queryset(self):
+        return SavingsGoal.objects.filter(user=self.request.user)
 
 
-@login_required
-def goal_edit(request, pk):
-    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
+class GoalCreateView(LoginRequiredMixin, CreateView):
+    model = SavingsGoal
+    form_class = SavingsGoalForm
+    template_name = 'goals/goal_form.html'
 
-    if request.method == 'POST':
-        form = SavingsGoalForm(request.POST, instance=goal)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Goal updated successfully!')
-            return redirect('goal_detail', pk=goal.pk)
-    else:
-        form = SavingsGoalForm(instance=goal)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create Savings Goal'
+        return context
 
-    return render(request, 'goals/goal_form.html', {
-        'form': form,
-        'goal': goal,
-        'title': 'Edit Goal'
-    })
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success(self.request, f'Goal "{form.instance.name}" created successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('goal_detail', kwargs={'pk': self.object.pk})
 
 
-@login_required
-def goal_delete(request, pk):
-    goal = get_object_or_404(SavingsGoal, pk=pk, user=request.user)
+class GoalUpdateView(LoginRequiredMixin, UpdateView):
+    model = SavingsGoal
+    form_class = SavingsGoalForm
+    template_name = 'goals/goal_form.html'
 
-    if request.method == 'POST':
-        goal.delete()
-        messages.success(request, 'Goal deleted successfully!')
-        return redirect('goal_list')
+    def get_queryset(self):
+        return SavingsGoal.objects.filter(user=self.request.user)
 
-    return render(request, 'goals/goal_confirm_delete.html', {'goal': goal})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Goal'
+        context['goal'] = self.object
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Goal updated successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('goal_detail', kwargs={'pk': self.object.pk})
+
+
+class GoalDeleteView(LoginRequiredMixin, DeleteView):
+    model = SavingsGoal
+    template_name = 'goals/goal_confirm_delete.html'
+    context_object_name = 'goal'
+    success_url = reverse_lazy('goal_list')
+
+    def get_queryset(self):
+        return SavingsGoal.objects.filter(user=self.request.user)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Goal deleted successfully!')
+        return super().form_valid(form)
