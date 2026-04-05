@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from categories.models import Category
 
@@ -122,3 +124,14 @@ class Transaction(models.Model):
         if self.type == 'expense':
             return f"-${self.amount}"
         return f"${self.amount}"
+
+
+@receiver(post_save, sender=Transaction)
+def trigger_budget_alert(sender, instance, created, **kwargs):
+    """
+    After saving a transaction, fire the budget alert check asynchronously.
+    Only runs when a user is attached (skips seed data which has no user).
+    """
+    if instance.user_id and instance.type == 'expense':
+        from transactions.tasks import check_budget_alert
+        check_budget_alert.delay(instance.user_id)
