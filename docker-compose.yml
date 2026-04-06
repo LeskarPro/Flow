@@ -1,0 +1,85 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:16
+    container_name: flow_db
+    restart: always
+    environment:
+      POSTGRES_DB: flowdb
+      POSTGRES_USER: flowuser
+      POSTGRES_PASSWORD: flowpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:7-alpine
+    container_name: flow_redis
+    restart: always
+
+  web:
+    build: .
+    container_name: flow_web
+    restart: always
+    command: gunicorn Flow.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - DB_NAME=flowdb
+      - DB_USER=flowuser
+      - DB_PASSWORD=flowpassword
+      - REDIS_URL=redis://redis:6379/0
+
+  celery:
+    build: .
+    container_name: flow_celery
+    restart: always
+    command: celery -A Flow worker -l info
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - DB_NAME=flowdb
+      - DB_USER=flowuser
+      - DB_PASSWORD=flowpassword
+      - REDIS_URL=redis://redis:6379/0
+
+  celery_beat:
+    build: .
+    container_name: flow_celery_beat
+    restart: always
+    command: celery -A Flow beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_HOST=db
+      - DB_NAME=flowdb
+      - DB_USER=flowuser
+      - DB_PASSWORD=flowpassword
+      - REDIS_URL=redis://redis:6379/0
+
+  nginx:
+    image: nginx:latest
+    container_name: flow_nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
