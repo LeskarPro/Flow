@@ -27,7 +27,18 @@ Originally built for the SoftUni Django Basics exam, then upgraded to a full Dja
 - Pillow (image uploads)
 - Bootstrap 5
 
-## Getting Started
+## Live Deployment
+
+The project is deployed on AWS EC2 and accessible at:
+
+**[http://http://54.167.195.55](http://54.167.195.55)**
+
+Deployed on an AWS EC2 t2.micro instance (Ubuntu 22.04) using Docker Compose.
+The stack runs five containers: Django (Gunicorn), PostgreSQL, Redis, Nginx, and Celery.
+
+Admin panel: **[http://http://54.167.195.55/admin](http://54.167.195.55/admin)**
+
+## Getting Started (Local Development)
 
 ### Prerequisites
 
